@@ -171,6 +171,13 @@ Controller.prototype.getAdContainerDiv = function() {
   return this.adUi.getAdContainerDiv();
 };
 
+/**
+ * @return {HTMLElement} The div for the clickthrough container.
+ */
+Controller.prototype.getClickThroughDiv = function() {
+  return this.adUi.getClickThroughDiv();
+};
+
 
 /**
  * @return {Object} The content player.
@@ -248,6 +255,21 @@ Controller.prototype.onAdMuteClick = function() {
     this.adUi.mute();
     this.sdkImpl.mute();
   }
+};
+
+/**
+ * Called by the ad UI when the clickthrough container is clicked.
+ */
+Controller.prototype.onClickThroughClick = function() {
+  this.sdkImpl.pauseAds();
+};
+
+
+/**
+ * Enable custom clickthrough handling
+ */
+Controller.prototype.enableClickThroughHandling = function() {
+  this.adUi.enableClickThroughHandling();
 };
 
 

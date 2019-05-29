@@ -37,6 +37,12 @@ const AdUi = function(controller) {
   this.adContainerDiv = document.createElement('div');
 
   /**
+   * Div used to capture clicks for environments where custom
+   * clicktracking is used
+   */
+  this.clickThroughDiv = document.createElement('div');
+
+  /**
    * Div used to display ad controls.
    */
   this.controlsDiv = document.createElement('div');
@@ -135,6 +141,7 @@ AdUi.prototype.createAdContainer = function() {
       this.hideAdControls.bind(this),
       false);
   this.createControls();
+  this.createClickThrough();
   this.controller.injectAdContainerDiv(this.adContainerDiv);
 };
 
@@ -200,6 +207,30 @@ AdUi.prototype.createControls = function() {
   this.sliderDiv.appendChild(this.sliderLevelDiv);
 };
 
+/**
+ * Create clickthrough container
+ */
+AdUi.prototype.createClickThrough = function() {
+  this.addClass(this.clickThroughDiv, 'ima-clickthrough-container');
+  this.clickThroughDiv.style.zIndex = 1112;
+  this.clickThroughDiv.style.display = 'none';
+
+  this.clickThroughDiv.addEventListener(
+    'touchstart',
+    this.onClickThroughClick.bind(this),
+    false);
+
+  this.adContainerDiv.appendChild(this.clickThroughDiv);
+};
+
+/**
+ * Enable custom clicktrack handling
+ */
+AdUi.prototype.enableClickThroughHandling = function() {
+  // clickthrough layer is initially created with display:none
+  this.clickThroughDiv.style.removeProperty('display');
+};
+
 
 /**
  * Listener for clicks on the play/pause button during ad playback.
@@ -224,6 +255,13 @@ AdUi.prototype.onAdFullscreenClick = function() {
   this.controller.toggleFullscreen();
 };
 
+
+/**
+ * Listener for clicks on the clickthrough container.
+ */
+AdUi.prototype.onClickThroughClick = function() {
+  this.controller.onClickThroughClick();
+};
 
 /**
  * Show pause and hide play button
@@ -562,6 +600,14 @@ AdUi.prototype.removeClass = function(element, classToRemove) {
  */
 AdUi.prototype.getAdContainerDiv = function() {
   return this.adContainerDiv;
+};
+
+
+/**
+ * @return {HTMLElement} The div for the clickthrough container.
+ */
+AdUi.prototype.getClickThroughDiv = function() {
+  return this.clickThroughDiv;
 };
 
 

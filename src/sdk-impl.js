@@ -146,7 +146,8 @@ const SdkImpl = function(controller) {
 SdkImpl.prototype.initAdObjects = function() {
   this.adDisplayContainer = new google.ima.AdDisplayContainer(
       this.controller.getAdContainerDiv(),
-      this.controller.getContentPlayer());
+      this.controller.getContentPlayer(),
+      this.controller.getClickThroughDiv());
 
   this.adsLoader = new google.ima.AdsLoader(this.adDisplayContainer);
 
@@ -285,6 +286,10 @@ SdkImpl.prototype.onAdsManagerLoaded = function(adsManagerLoadedEvent) {
     this.adsManager.addEventListener(
         google.ima.AdEvent.Type.RESUMED,
         this.onAdResumed.bind(this));
+  }
+
+  if (this.adsManager.isCustomClickTrackingUsed()) {
+    this.controller.enableClickThroughHandling();
   }
 
   if (!this.autoPlayAdBreaks) {
