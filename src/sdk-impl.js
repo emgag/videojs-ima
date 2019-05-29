@@ -451,6 +451,8 @@ SdkImpl.prototype.onAdStarted = function(adEvent) {
  * Handles an ad click. Puts the player UI in a paused state.
  */
 SdkImpl.prototype.onAdPaused = function() {
+  // https://github.com/googleads/videojs-ima/issues/776
+  this.pauseAds();
   this.controller.onAdsPaused();
 };
 
