@@ -17,7 +17,6 @@
     "lint": "eslint \"src/*.js\"",
     "rollup": "npm-run-all rollup:*",
     "rollup:max": "rollup -c configs/rollup.config.js",
-    "rollup:es": "rollup -c configs/rollup.config.es.js",
     "rollup:min": "rollup -c configs/rollup.config.min.js",
     "rollup:es": "rollup -c configs/rollup.config.es.js",
     "pretest": "npm run rollup",
