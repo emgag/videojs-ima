@@ -609,6 +609,12 @@ var AdUi = function AdUi(controller) {
   this.adContainerDiv = document.createElement('div');
 
   /**
+   * Div used to capture clicks for environments where custom
+   * clicktracking is used
+   */
+  this.clickThroughDiv = document.createElement('div');
+
+  /**
    * Div used to display ad controls.
    */
   this.controlsDiv = document.createElement('div');
@@ -700,6 +706,7 @@ AdUi.prototype.createAdContainer = function () {
   this.adContainerDiv.addEventListener('mouseenter', this.showAdControls.bind(this), false);
   this.adContainerDiv.addEventListener('mouseleave', this.hideAdControls.bind(this), false);
   this.createControls();
+  this.createClickThrough();
   this.controller.injectAdContainerDiv(this.adContainerDiv);
 };
 
@@ -753,6 +760,27 @@ AdUi.prototype.createControls = function () {
 };
 
 /**
+ * Create clickthrough container
+ */
+AdUi.prototype.createClickThrough = function () {
+  this.addClass(this.clickThroughDiv, 'ima-clickthrough-container');
+  this.clickThroughDiv.style.zIndex = 1112;
+  this.clickThroughDiv.style.display = 'none';
+
+  this.clickThroughDiv.addEventListener('touchstart', this.onClickThroughClick.bind(this), false);
+
+  this.adContainerDiv.appendChild(this.clickThroughDiv);
+};
+
+/**
+ * Enable custom clicktrack handling
+ */
+AdUi.prototype.enableClickThroughHandling = function () {
+  // clickthrough layer is initially created with display:none
+  this.clickThroughDiv.style.removeProperty('display');
+};
+
+/**
  * Listener for clicks on the play/pause button during ad playback.
  */
 AdUi.prototype.onAdPlayPauseClick = function () {
@@ -771,6 +799,13 @@ AdUi.prototype.onAdMuteClick = function () {
  */
 AdUi.prototype.onAdFullscreenClick = function () {
   this.controller.toggleFullscreen();
+};
+
+/**
+ * Listener for clicks on the clickthrough container.
+ */
+AdUi.prototype.onClickThroughClick = function () {
+  this.controller.onClickThroughClick();
 };
 
 /**
@@ -1092,6 +1127,13 @@ AdUi.prototype.getAdContainerDiv = function () {
 };
 
 /**
+ * @return {HTMLElement} The div for the clickthrough container.
+ */
+AdUi.prototype.getClickThroughDiv = function () {
+  return this.clickThroughDiv;
+};
+
+/**
  * Changes the flag to show or hide the ad countdown timer.
  *
  * @param {boolean} showCountdownIn Show or hide the countdown timer.
@@ -1108,7 +1150,7 @@ var main = "./dist/videojs.ima.js";
 var module$1 = "./dist/videojs.ima.es.js";
 var author = { "name": "Google Inc." };
 var engines = { "node": ">=0.8.0" };
-var scripts = { "contBuild": "watch 'npm run rollup:max' src", "predevServer": "echo \"Starting up server on localhost:8000.\"", "devServer": "npm-run-all -p testServer contBuild", "lint": "eslint \"src/*.js\"", "rollup": "npm-run-all rollup:*", "rollup:max": "rollup -c configs/rollup.config.js", "rollup:es": "rollup -c configs/rollup.config.es.js", "rollup:min": "rollup -c configs/rollup.config.min.js", "pretest": "npm run rollup", "start": "npm run devServer", "test": "npm-run-all test:*", "test:vjs5": "npm install video.js@5.19.2 --no-save && npm-run-all -p -r testServer webdriver", "test:vjs6": "npm install video.js@6 --no-save && npm-run-all -p -r testServer webdriver", "test:vjs7": "npm install video.js@7 --no-save && npm-run-all -p -r testServer webdriver", "testServer": "http-server --cors -p 8000 --silent", "preversion": "node scripts/preversion.js && npm run lint && npm test", "version": "node scripts/version.js", "postversion": "node scripts/postversion.js", "webdriver": "mocha test/webdriver/*.js --no-timeouts" };
+var scripts = { "contBuild": "watch 'npm run rollup:max' src", "predevServer": "echo \"Starting up server on localhost:8000.\"", "devServer": "npm-run-all -p testServer contBuild", "lint": "eslint \"src/*.js\"", "rollup": "npm-run-all rollup:*", "rollup:max": "rollup -c configs/rollup.config.js", "rollup:min": "rollup -c configs/rollup.config.min.js", "rollup:es": "rollup -c configs/rollup.config.es.js", "pretest": "npm run rollup", "start": "npm run devServer", "test": "npm-run-all test:*", "test:vjs5": "npm install video.js@5.19.2 --no-save && npm-run-all -p -r testServer webdriver", "test:vjs6": "npm install video.js@6 --no-save && npm-run-all -p -r testServer webdriver", "test:vjs7": "npm install video.js@7 --no-save && npm-run-all -p -r testServer webdriver", "testServer": "http-server --cors -p 8000 --silent", "preversion": "node scripts/preversion.js && npm run lint && npm test", "version": "node scripts/version.js", "postversion": "node scripts/postversion.js", "webdriver": "mocha test/webdriver/*.js --no-timeouts", "prepare": "npm run rollup:es" };
 var repository = { "type": "git", "url": "https://github.com/googleads/videojs-ima" };
 var files = ["CHANGELOG.md", "LICENSE", "README.md", "dist/", "src/"];
 var dependencies = { "can-autoplay": "^3.0.0", "cryptiles": "^4.1.2", "video.js": "^5.19.2 || ^6 || ^7", "videojs-contrib-ads": "^6" };
@@ -1273,7 +1315,7 @@ var SdkImpl = function SdkImpl(controller) {
  * Creates and initializes the IMA SDK objects.
  */
 SdkImpl.prototype.initAdObjects = function () {
-  this.adDisplayContainer = new google.ima.AdDisplayContainer(this.controller.getAdContainerDiv(), this.controller.getContentPlayer());
+  this.adDisplayContainer = new google.ima.AdDisplayContainer(this.controller.getAdContainerDiv(), this.controller.getContentPlayer(), this.controller.getClickThroughDiv());
 
   this.adsLoader = new google.ima.AdsLoader(this.adDisplayContainer);
 
@@ -1369,6 +1411,10 @@ SdkImpl.prototype.onAdsManagerLoaded = function (adsManagerLoadedEvent) {
     // Show/hide controls on pause and resume (triggered by tap).
     this.adsManager.addEventListener(google.ima.AdEvent.Type.PAUSED, this.onAdPaused.bind(this));
     this.adsManager.addEventListener(google.ima.AdEvent.Type.RESUMED, this.onAdResumed.bind(this));
+  }
+
+  if (this.adsManager.isCustomClickTrackingUsed()) {
+    this.controller.enableClickThroughHandling();
   }
 
   if (!this.autoPlayAdBreaks) {
@@ -1516,6 +1562,8 @@ SdkImpl.prototype.onAdStarted = function (adEvent) {
  * Handles an ad click. Puts the player UI in a paused state.
  */
 SdkImpl.prototype.onAdPaused = function () {
+  // https://github.com/googleads/videojs-ima/issues/776
+  this.pauseAds();
   this.controller.onAdsPaused();
 };
 
@@ -1974,6 +2022,13 @@ Controller.prototype.getAdContainerDiv = function () {
 };
 
 /**
+ * @return {HTMLElement} The div for the clickthrough container.
+ */
+Controller.prototype.getClickThroughDiv = function () {
+  return this.adUi.getClickThroughDiv();
+};
+
+/**
  * @return {Object} The content player.
  */
 Controller.prototype.getContentPlayer = function () {
@@ -2043,6 +2098,20 @@ Controller.prototype.onAdMuteClick = function () {
     this.adUi.mute();
     this.sdkImpl.mute();
   }
+};
+
+/**
+ * Called by the ad UI when the clickthrough container is clicked.
+ */
+Controller.prototype.onClickThroughClick = function () {
+  this.sdkImpl.pauseAds();
+};
+
+/**
+ * Enable custom clickthrough handling
+ */
+Controller.prototype.enableClickThroughHandling = function () {
+  this.adUi.enableClickThroughHandling();
 };
 
 /**
@@ -2735,4 +2804,5 @@ var init = function init(options) {
 var registerPlugin = videojs.registerPlugin || videojs.plugin;
 registerPlugin('ima', init);
 
+export { init };
 export default ImaPlugin;
