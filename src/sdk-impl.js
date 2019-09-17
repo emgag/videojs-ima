@@ -266,9 +266,6 @@ SdkImpl.prototype.onAdsManagerLoaded = function(adsManagerLoadedEvent) {
       google.ima.AdEvent.Type.STARTED,
       this.onAdStarted.bind(this));
   this.adsManager.addEventListener(
-      google.ima.AdEvent.Type.CLICK,
-      this.onAdPaused.bind(this));
-  this.adsManager.addEventListener(
       google.ima.AdEvent.Type.COMPLETE,
       this.onAdComplete.bind(this));
   this.adsManager.addEventListener(
